@@ -227,8 +227,8 @@ else:
             Logger.error(`
 			Unable to connect to port localhost on Host 7001 in Maya
 			Please run the mel command in the maya script editor ↓↓↓
-			
-			commandPort -n "${mayahost}:${mayaport}" -stp "mel" -echoOutput;
+
+			commandPort -n "${mayahost}:${mayaport}" -stp "mel";
 
 			`);
         }).on("connect", (e) => {
