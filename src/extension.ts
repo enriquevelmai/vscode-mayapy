@@ -69,12 +69,15 @@ export function activate(context: vscode.ExtensionContext) {
 	let pythonConfig = vscode.workspace.getConfiguration("python")
 
 	// NOTE 添加 python 自动补全路径
-	let extraPaths: Array<string> = pythonConfig.get("autoComplete.extraPaths")
-	let completionPath: string = path.join(path.dirname(__dirname), "mayaSDK")
-	if (!extraPaths.includes(completionPath)) {
-		extraPaths.splice(0, 0, completionPath);
-		pythonConfig.update("autoComplete.extraPaths", extraPaths, true)
-	}
+	let settings = ["autoComplete.extraPaths", "analysis.extraPaths"]; // Both settings
+	let completionPath = path.join(path.dirname(__dirname), "mayaSDK");
+	settings.forEach(setting => {
+		let extraPaths = pythonConfig.get(setting) || []; // Get current paths or default to an empty array
+		if (!extraPaths.includes(completionPath)) {
+			extraPaths.splice(0, 0, completionPath); // Add completionPath at the beginning
+			pythonConfig.update(setting, extraPaths, true);
+		}
+	});
 
 	function debug_start(uri, hostname, port) {
 		// NOTE 设置 Debug 设定 | 开启 Debug 模式
@@ -144,7 +147,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const port: number = config.get("port");
 
 		// NOTE 连接 ptvsd 代码
-		const attach_code: string = `
+        const attach_code = `
 import sys
 ptvsd_module = r"${ptvsdPath}"
 if ptvsd_module not in sys.path:
@@ -153,8 +156,13 @@ if ptvsd_module not in sys.path:
 import ptvsd
 ptvsd.enable_attach(("${hostname}",${port}))
 print("\\nMayaPy Python Debugger : ptvsd module ready\\n")`;
-
-		const run_code: string = `
+        const run_code = `
+import sys
+try:
+	import imp  # Python 2
+	reload = imp.reload
+except ImportError:
+	from importlib import reload  # Python 3
 current_directory = r"${fileDirname}"
 if current_directory not in sys.path:
 	sys.path.insert(0,current_directory)
@@ -165,7 +173,6 @@ if '${file_name}' not in globals():
 else:
 	reload(${file_name})
 `;
-
 
 		let activeDebugSession = vscode.debug.activeDebugSession
 		// NOTE 检查当前 Debug 状态
@@ -250,7 +257,7 @@ else:
 			Unable to connect to port localhost on Host 7001 in Maya
 			Please run the mel command in the maya script editor ↓↓↓
 			
-			commandPort -n "${mayahost}:${mayaport}" -stp "mel" -echoOutput;
+			commandPort -n "${mayahost}:${mayaport}" -stp "mel";
 
 			`)
 		}).on("connect", (e) => {
