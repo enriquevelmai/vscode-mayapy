@@ -72,12 +72,15 @@ function activate(context) {
     Logger.info(`${os.tmpdir()}`);
     let pythonConfig = vscode.workspace.getConfiguration("python");
     // NOTE 添加 python 自动补全路径
-    let extraPaths = pythonConfig.get("autoComplete.extraPaths");
-    let completionPath = path.join(path.dirname(__dirname), "mayaSDK");
-    if (!extraPaths.includes(completionPath)) {
-        extraPaths.splice(0, 0, completionPath);
-        pythonConfig.update("autoComplete.extraPaths", extraPaths, true);
-    }
+	let settings = ["autoComplete.extraPaths", "analysis.extraPaths"]; // Both settings
+	let completionPath = path.join(path.dirname(__dirname), "mayaSDK");
+	settings.forEach(setting => {
+		let extraPaths = pythonConfig.get(setting) || []; // Get current paths or default to an empty array
+		if (!extraPaths.includes(completionPath)) {
+			extraPaths.splice(0, 0, completionPath); // Add completionPath at the beginning
+			pythonConfig.update(setting, extraPaths, true);
+		}
+	});
     function debug_start(uri, hostname, port) {
         // NOTE 设置 Debug 设定 | 开启 Debug 模式
         const fileDirname = path.dirname(uri.fsPath);
