@@ -145,6 +145,12 @@ import ptvsd
 ptvsd.enable_attach(("${hostname}",${port}))
 print("\\nMayaPy Python Debugger : ptvsd module ready\\n")`;
         const run_code = `
+import sys
+try:
+	import imp  # Python 2
+	reload = imp.reload
+except ImportError:
+	from importlib import reload  # Python 3
 current_directory = r"${fileDirname}"
 if current_directory not in sys.path:
 	sys.path.insert(0,current_directory)
